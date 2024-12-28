@@ -285,15 +285,19 @@ yellow "1、网页端权限是否开启"
 yellow "2、端口是否设置错误(2个TCP、1个UDP)"
 yellow "3、尝试更换网页端3个端口并重装"
 yellow "4、当前Serv00服务器炸了？等会再试"
-exit
+red "5、以上都试了，哥直接躺平，交给进程保活，过会再来看"
 fi
 }
 
 get_argodomain() {
   if [[ -n $ARGO_AUTH ]]; then
+    echo "$ARGO_DOMAIN" > gdym.log
     echo "$ARGO_DOMAIN"
   else
     argodomain=$(grep -oE 'https://[[:alnum:]+\.-]+\.trycloudflare\.com' boot.log 2>/dev/null | sed 's@https://@@')
+    if [ -z ${argodomain} ]; then
+    argodomain="Argo临时域名暂时获取失败，Argo节点暂不可用"
+    fi
     echo "$argodomain"
   fi
 }
@@ -301,9 +305,6 @@ get_argodomain() {
 get_links(){
 argodomain=$(get_argodomain)
 echo -e "\e[1;32mArgo域名:\e[1;35m${argodomain}\e[0m\n"
-if [ -z ${argodomain} ]; then
-yellow "Argo临时域名暂时未生成，两个Argo节点不可用，其他未被墙的节点依旧可用"
-fi
 ISP=$(curl -s --max-time 5 https://speed.cloudflare.com/meta | awk -F\" '{print $26}' | sed -e 's/ /_/g' || echo "0")
 get_name() { if [ "$HOSTNAME" = "s1.ct8.pl" ]; then SERVER="CT8"; else SERVER=$(echo "$HOSTNAME" | cut -d '.' -f 1); fi; echo "$SERVER"; }
 NAME="$ISP-$(get_name)"
